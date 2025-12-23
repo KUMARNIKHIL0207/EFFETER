@@ -1,0 +1,6 @@
+# ffmpeg binary placeholder
+# In production, replace this with actual ffmpeg executable for Android
+# Build instructions:
+# 1. Download ffmpeg source
+# 2. Compile for Android ARM/ARM64 architecture using NDK
+# 3. Place executable in assets/ directory

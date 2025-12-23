@@ -1,0 +1,6 @@
+# yt-dlp binary placeholder
+# In production, replace this with actual yt-dlp executable for Android
+# Build instructions:
+# 1. Download yt-dlp source
+# 2. Compile for Android ARM/ARM64 architecture
+# 3. Place executable in assets/ directory
