@@ -1,0 +1,84 @@
+name: Build and Release APK
+
+on: 
+  push:
+    branches: 
+      - main
+  workflow_dispatch:
+
+jobs:
+  build: 
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses:  actions/checkout@v4
+      
+      - name: Set up JDK 11
+        uses:  actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+          cache: gradle
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+      
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+      
+      - name:  Find APK file
+        id: apk
+        run: |
+          APK_PATH=$(find . -name "app-debug.apk" -type f | head -1)
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "APK found at: $APK_PATH"
+      
+      - name: Upload APK as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name:  app-debug-apk
+          path: ${{ steps.apk.outputs.apk_path }}
+          retention-days: 30
+          if-no-files-found: error
+      
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+      
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/heads/main')
+        with:
+          files: ${{ steps.apk. outputs.apk_path }}
+          tag_name: v${{ github.run_number }}-${{ steps.date.outputs. date }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            # EFFETER App Build Release
+            
+            **Build Number:** ${{ github.run_number }}
+            **Date:** ${{ steps.date.outputs.date }}
+            **Commit:** ${{ github.sha }}
+            **Author:** ${{ github.actor }}
+            
+            ## Download
+            - APK: `app-debug. apk`
+            
+            ## Installation
+            ```bash
+            adb install EFFETER-v${{ github. run_number }}.apk
+            ```
+            
+            ---
+            *Automatically built by GitHub Actions*
+          draft: false
+          prerelease:  false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
